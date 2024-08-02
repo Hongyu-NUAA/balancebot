@@ -27,6 +27,7 @@
 extern const AP_HAL::HAL& hal;
 
 #define SERVO_OUTPUT_RANGE  4500
+#define TILT_OUTPUT_RATE    5.0f
 
 // init
 void AP_MotorsTailsitter::init(motor_frame_class frame_class, motor_frame_type frame_type)
@@ -117,6 +118,10 @@ void AP_MotorsTailsitter::output_to_motors()
 
     SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorLeft, _tilt_left*SERVO_OUTPUT_RANGE);
     SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight, _tilt_right*SERVO_OUTPUT_RANGE);
+    if(hal.rcin->read(CH_9) < 1500){
+            SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorLeft, -TILT_OUTPUT_RATE*SERVO_OUTPUT_RANGE);
+            SRV_Channels::set_output_scaled(SRV_Channel::k_tiltMotorRight, -TILT_OUTPUT_RATE*SERVO_OUTPUT_RANGE);
+        }
 
     // 平衡车 轮腿舵机
     SRV_Channels::set_output_scaled(SRV_Channel::k_LeftJointMotor, (_high_out -_roll_out) * 9000);

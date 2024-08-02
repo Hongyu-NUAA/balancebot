@@ -356,7 +356,7 @@ void AC_BalanceControl::check_Acceleration(){
             JT = 1;      //关节舵机影响因子置1，开启
             _motors->set_fac_out(JT);   //输出飞行部分影响因子，方便调用
 
-            if((fabsf(accelData) > _take_off_acc) && (hal.rcin->read(CH_3) > _take_off_thr) && (hal.rcin->read(CH_7) < 1500)){ //当反馈的加速度值大于设定的起飞加速度，油门输入大于设定的起飞油门并且当前处于地空过渡时，则进入过渡
+            if((fabsf(accelData) > _take_off_acc) && (hal.rcin->read(CH_3) > _take_off_thr) && (hal.rcin->read(CH_7) < 1500) && _motors->armed()){ //起飞检测
             gcs().send_text(MAV_SEVERITY_NOTICE, "*************************************");
             gcs().send_text(MAV_SEVERITY_NOTICE, "Balance_Copter is taking off, accel = %f", accelData);
             gcs().send_text(MAV_SEVERITY_NOTICE, "*************************************");
@@ -379,7 +379,7 @@ void AC_BalanceControl::check_Acceleration(){
             }
             _motors->set_fac_out(JT);   
 
-            if((fabsf(accelData) > _landing_acc) && (hal.rcin->read(CH_3) < _landing_thr) && (hal.rcin->read(CH_7) > 1500)){ //当反馈的加速度值大于设定的降落加速度，油门输入小于设定的降落油门并且当前处于空地过渡时，则进入过渡
+            if((fabsf(accelData) > _landing_acc) && (hal.rcin->read(CH_3) < _landing_thr) && (hal.rcin->read(CH_7) > 1500) && alt_cm < 10){ //降落检测
             gcs().send_text(MAV_SEVERITY_NOTICE, "*************************************");
             gcs().send_text(MAV_SEVERITY_NOTICE, "Balance_Copter is landing, accel = %f", accelData);
             gcs().send_text(MAV_SEVERITY_NOTICE, "*************************************");
