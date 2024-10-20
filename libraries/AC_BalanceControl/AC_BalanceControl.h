@@ -57,8 +57,8 @@
 // #define AC_BALANCE_TARGET_SGF_B         1200
 // #define AC_BALANCE_TARGET_SGF_R         20
 
-#define AC_BALANCE_JOINT_OFS_B         1400
-#define AC_BALANCE_JOINT_SLO_B         50
+#define AC_BALANCE_JOINT_OFS_B          1400
+#define AC_BALANCE_JOINT_SLO_B          50
 
 #define AC_BALANCE_TAKE_OFF_ACC         0.3f
 #define AC_BALANCE_LANDING_ACC          1.5f
@@ -77,8 +77,8 @@ public:
 
     float angle_controller(float Angle, float Gyro);
     float velocity_controller(float encoder_left, float encoder_right);
-    float turn_controller(float yaw, float gyro);
-    void  roll_controller(float roll);
+    float turn_controller(float gyro);
+    void  roll_controller(float roll, float gyro);
     void  hight_controller();
 
     void pilot_control();
@@ -189,6 +189,13 @@ protected:
     // 转向环参数
     float turn_target;
     float turn_out;
+    float turn_bias;
+
+    ///////////////////////////////////////////////////////
+    // 滚转环参数
+    float roll_target;
+    float roll_out;
+    float roll_bias;
 
     ///////////////////////////////////////////////////////
     int16_t _movement_x;

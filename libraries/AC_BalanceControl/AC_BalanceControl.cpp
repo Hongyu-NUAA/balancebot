@@ -123,7 +123,7 @@ float AC_BalanceControl::velocity_controller(float encoder_left, float encoder_r
     //================速度PI控制器=====================//
 
     // 获取最新速度偏差=测量速度（左右编码器之和）- 目标速度
-    encoder_error = (encoder_left + encoder_right) - encoder_movement;
+    encoder_error = encoder_movement - (encoder_left + encoder_right);
     //对速度偏差进行一阶低通滤波
     encoder_error_filter = speed_low_pass_filter.apply(encoder_error, _dt);
     //更新速度输出
@@ -147,7 +147,7 @@ Output  : Turn control PWM
 入口参数：Z轴陀螺仪
 返回  值：转向控制PWM
 **************************************************************************/
-float AC_BalanceControl::turn_controller(float yaw, float gyro)
+float AC_BalanceControl::turn_controller(float gyro)
 {
     //===================遥控左右旋转部分=================//
     turn_target = (float)_movement_z / 500.0f * Target_MAX_Velocity_Z;
@@ -163,18 +163,19 @@ float AC_BalanceControl::turn_controller(float yaw, float gyro)
     return turn_out;
 }
 
-void AC_BalanceControl::roll_controller(float roll)
+void AC_BalanceControl::roll_controller(float roll, float gyro)
 {
     if (_motors == nullptr) return;
-
-    float roll_out, roll_target;
 
     if(fabsf((hal.rcin->read(CH_1)-1500)) < 20){
         roll_target = 0.0f;
     }else{
         roll_target = (float)_movement_y / 500.0f * radians(60.0f);
     }
-    roll_out = _pid_roll.update_all(roll_target, roll, _dt);
+
+    roll_bias = roll_target - roll; 
+
+    roll_out = _pid_roll.kP() * roll_bias + _pid_roll.kD() * gyro;
 
     _motors->set_roll_out(JT * roll_out); // -1 ~ 1
 }
@@ -206,12 +207,14 @@ void AC_BalanceControl::update(void)
         return;
     }
 
-    static float angle_y, gyro_y, gyro_z;
+    static float angle_y, angle_x, gyro_x,  gyro_y, gyro_z;
     static float wheel_left_f, wheel_right_f;
     static float motor_target_left_f, motor_target_right_f;
     const float  max_scale_value = 10000.0f;
 
     angle_y = _ahrs->pitch;
+    angle_x = _ahrs->roll;
+    gyro_x  = _ahrs->get_gyro_latest()[0];
     gyro_y  = _ahrs->get_gyro_latest()[1];
     gyro_z  = _ahrs->get_gyro_latest()[2];
 
@@ -226,7 +229,7 @@ void AC_BalanceControl::update(void)
     control_velocity = velocity_controller(wheel_left_f, wheel_right_f);
 
     // 转向环PID控制
-    control_turn = turn_controller(_ahrs->yaw, gyro_z);
+    control_turn = turn_controller(gyro_z);
 
     // motor值正数使小车前进，负数使小车后退, 范围【-1，1】
     motor_target_left_f  = control_balance + control_velocity + control_turn; // 计算左轮电机最终PWM
@@ -244,7 +247,7 @@ void AC_BalanceControl::update(void)
     balanceCAN->setCurrent(1, S_FG * (int16_t)motor_target_right_int);
 
     // 腿部滚转控制
-    roll_controller(_ahrs->roll);
+    roll_controller(angle_x, gyro_x);
 
     // 腿部高度控制
     hight_controller();
