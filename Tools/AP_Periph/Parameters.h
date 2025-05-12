@@ -95,6 +95,10 @@ public:
         k_param_rangefinder_port1,
         k_param_options,
         k_param_rpm_msg_rate,
+        k_param_esc_rate,
+        k_param_esc_extended_telem_rate,
+        k_param_imu_sample_rate,
+        k_param_imu,
     };
 
     AP_Int16 format_version;
@@ -115,14 +119,14 @@ public:
 #ifdef AP_PERIPH_HAVE_LED_WITHOUT_NOTIFY
     AP_Int8 led_brightness;
 #endif
-#ifdef HAL_PERIPH_ENABLE_BARO
+#if AP_PERIPH_BARO_ENABLED
     AP_Int8 baro_enable;
 #endif
 #if !defined(HAL_NO_FLASH_SUPPORT) && !defined(HAL_NO_ROMFS_SUPPORT)
     AP_Int8 flash_bootloader;
 #endif
 
-#ifdef HAL_PERIPH_ENABLE_RANGEFINDER
+#if AP_PERIPH_RANGEFINDER_ENABLED
     AP_Int32 rangefinder_baud[RANGEFINDER_MAX_INSTANCES];
     AP_Int8 rangefinder_port[RANGEFINDER_MAX_INSTANCES];
     AP_Int16 rangefinder_max_rate;
@@ -135,7 +139,7 @@ public:
 #endif
 
 
-#ifdef HAL_PERIPH_ENABLE_ADSB
+#if AP_PERIPH_ADSB_ENABLED
     AP_Int32 adsb_baudrate;
     AP_Int8 adsb_port;
 #endif
@@ -145,7 +149,7 @@ public:
     AP_Int8 hardpoint_rate;
 #endif
 
-#if defined(HAL_PERIPH_ENABLE_HWESC) || defined(HAL_PERIPH_ENABLE_ESC_APD)
+#if AP_PERIPH_HOBBYWING_ESC_ENABLED || defined(HAL_PERIPH_ENABLE_ESC_APD)
     #if defined ESC_NUMBERS
         #error "ESC_NUMBERS should not have been previously defined"
     #endif
@@ -162,7 +166,7 @@ public:
     AP_Int8 pole_count[ESC_NUMBERS];
 #endif
 
-#ifdef HAL_PERIPH_ENABLE_GPS
+#if AP_PERIPH_GPS_ENABLED
     AP_Int8 gps_port;
 #if GPS_MOVING_BASELINE
     AP_Int8 gps_mb_only_can_port;
@@ -174,6 +178,7 @@ public:
 #endif
 
 #ifdef HAL_PERIPH_ENABLE_RC_OUT
+    AP_Int16 esc_rate;
     AP_Int8 esc_pwm_type;
     AP_Int16 esc_command_timeout_ms;
 #if HAL_WITH_ESC_TELEM && !HAL_GCS_ENABLED
@@ -181,6 +186,9 @@ public:
 #endif
 #if HAL_WITH_ESC_TELEM
     AP_Int32 esc_telem_rate;
+#if AP_EXTENDED_ESC_TELEM_ENABLED
+    AP_Int16 esc_extended_telem_rate;
+#endif
 #endif
 #endif
 
@@ -196,13 +204,17 @@ public:
     AP_Int16 sysid_this_mav;
 #endif
 
-#ifdef HAL_PERIPH_ENABLE_BATTERY
+#if AP_PERIPH_BATTERY_ENABLED
     AP_Int32 battery_hide_mask;
 #endif
 
-#ifdef HAL_PERIPH_ENABLE_EFI
+#if AP_PERIPH_EFI_ENABLED
     AP_Int32 efi_baudrate;
     AP_Int8 efi_port;
+#endif
+
+#if AP_PERIPH_IMU_ENABLED
+    AP_Int16 imu_sample_rate;
 #endif
 
 #if HAL_PERIPH_CAN_MIRROR
@@ -213,7 +225,7 @@ public:
     AP_Int8 temperature_msg_rate;
 #endif
 
-#ifdef HAL_PERIPH_ENABLE_RPM_STREAM
+#if AP_PERIPH_RPM_STREAM_ENABLED
     AP_Int16 rpm_msg_rate;
 #endif
 

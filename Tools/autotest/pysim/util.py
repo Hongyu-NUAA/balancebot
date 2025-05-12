@@ -416,7 +416,6 @@ def start_SITL(binary,
                gdb=False,
                gdb_no_tui=False,
                wipe=False,
-               synthetic_clock=True,
                home=None,
                model=None,
                speedup=1,
@@ -428,7 +427,7 @@ def start_SITL(binary,
                disable_breakpoints=False,
                customisations=[],
                lldb=False,
-               enable_fgview_output=False,
+               enable_fgview=False,
                supplementary=False,
                stdout_prefix=None):
 
@@ -516,8 +515,6 @@ def start_SITL(binary,
     if not supplementary:
         if wipe:
             cmd.append('-w')
-        if synthetic_clock:
-            cmd.append('-S')
         if home is not None:
             cmd.extend(['--home', home])
         cmd.extend(['--model', model])
@@ -534,7 +531,7 @@ def start_SITL(binary,
             cmd.extend(['--unhide-groups'])
         # somewhere for MAVProxy to connect to:
         cmd.append('--serial1=tcp:2')
-        if enable_fgview_output:
+        if enable_fgview:
             cmd.append("--enable-fgview")
 
     if len(defaults):
