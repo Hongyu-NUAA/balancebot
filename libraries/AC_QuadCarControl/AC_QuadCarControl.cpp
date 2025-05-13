@@ -111,7 +111,7 @@ float AC_QuadCarControl::Velocity(float encoder_left, float encoder_right)
     float smoothed_target = smooth_target_speed(target_speed);
 
     // 获取最新速度偏差=目标速度-测量速度（左右编码器之和）
-    Encoder_error = (encoder_left + encoder_right);
+    Encoder_error = encoder_movement - (encoder_left + encoder_right);
 
     float Encoder_filter = speed_low_pass_filter.apply(Encoder_error, _dt);
 
@@ -244,7 +244,6 @@ void AC_QuadCarControl::pilot_control()
     int16_t pwm_x = hal.rcin->read(CH_2) - 1500;
     int16_t pwm_z = hal.rcin->read(CH_4) - 1500;
     int16_t pwm_y = hal.rcin->read(CH_1) - 1500;
-    int16_t pwm_h = hal.rcin->read(CH_6) - 1500;
 
     if (pwm_x < 50 && pwm_x > -50) {
         _movement_x = 0;
