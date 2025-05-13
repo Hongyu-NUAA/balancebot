@@ -46,6 +46,15 @@ AC_QuadCarControl::AC_QuadCarControl(AP_Motors* motors, AP_AHRS_View* ahrs)
     _last_target_speed = 0.0f;
 
     balanceMode = BalanceMode::ground;
+
+    stop_quadcar_control = false;
+
+    force_stop_quadcar_control = false;
+}
+
+void AC_QuadCarControl::init()
+{
+    quadcarCAN = AP_QuadCarCAN::get_singleton();
 }
 
 // 平滑目标速度函数，使加速度限制在_max_accel范围内
@@ -75,9 +84,13 @@ Output  : Speed control PWM
 **************************************************************************/
 float AC_QuadCarControl::Velocity(float encoder_left, float encoder_right)
 {
-    float velocity;
-    float Encoder_Now;
+    float velocity_out;
+    float Encoder_error;
     float target_speed = 0.0f;
+    float encoder_movement;
+
+    //================遥控前进后退部分====================//
+    encoder_movement = (float)_movement_x / 500.0f * Target_MAX_Velocity_X;
 
     //================速度PI控制器=====================//
     
@@ -98,14 +111,22 @@ float AC_QuadCarControl::Velocity(float encoder_left, float encoder_right)
     float smoothed_target = smooth_target_speed(target_speed);
 
     // 获取最新速度偏差=目标速度-测量速度（左右编码器之和）
-    Encoder_Now = (encoder_left + encoder_right);
+    Encoder_error = (encoder_left + encoder_right);
 
-    float Encoder_filter = speed_low_pass_filter.apply(Encoder_Now, _dt);
+    float Encoder_filter = speed_low_pass_filter.apply(Encoder_error, _dt);
 
     // 使用平滑后的目标速度
-    velocity = _pid_speed.update_all(smoothed_target, Encoder_filter, _dt);
+    velocity_out = _pid_speed.update_all(smoothed_target, Encoder_filter, _dt);
 
-    return velocity;
+    if (stop_quadcar_control || Flag_Stop || force_stop_quadcar_control) {
+        _pid_speed.reset_I();
+        Encoder_error = 0;
+        Encoder_filter = 0;
+        encoder_movement = 0;
+        velocity_out = 0;
+    }
+
+    return velocity_out;
 }
 
 /**************************************************************************
@@ -116,13 +137,23 @@ Output  : Turn control PWM
 入口参数：Z轴陀螺仪
 返回  值：转向控制PWM
 **************************************************************************/
-float AC_QuadCarControl::Turn(float yaw, float gyro)
+float AC_QuadCarControl::Turn(float gyro)
 {
-    //===================转向PD控制器=================//
-    // 使用Target_Velocity_Z作为转向目标
-    float turn = (Turn_Target)*_pid_turn.kP() + gyro * _pid_turn.kD(); // 结合Z轴陀螺仪进行PD控制
+    float turn_target;
+    float turn_out;
+    
+    //===================遥控左右旋转部分=================//
+    turn_target = (float)_movement_z / 500.0f * Target_MAX_Velocity_Z;
 
-    return turn;
+    //===================转向PD控制器=================//
+    turn_out = turn_target * _pid_turn.kP() + gyro * _pid_turn.kD(); // 结合Z轴陀螺仪进行PD控制
+
+    if (stop_quadcar_control || Flag_Stop || force_stop_quadcar_control) {
+        turn_out = 0;
+        turn_target = 0;
+    }
+
+    return turn_out;
 }
 
 void AC_QuadCarControl::update(void)
@@ -132,12 +163,11 @@ void AC_QuadCarControl::update(void)
         return;
     }
 
-    AP_QuadCarCAN *quadcarCAN = AP_QuadCarCAN::get_singleton();
-
     if (quadcarCAN == nullptr) {
         gcs().send_text(MAV_SEVERITY_WARNING, "quadcarCAN = nullptr");
         return;
     }
+    
     if (_ahrs == nullptr) {
         gcs().send_text(MAV_SEVERITY_WARNING, "_ahrs = nullptr");
         return;
@@ -155,34 +185,34 @@ void AC_QuadCarControl::update(void)
     wheel_right_f = -(float)quadcarCAN->getSpeed(2) / max_scale_value;
 
     // 调试用
-    static uint16_t cnt = 0;
-    cnt++;
-    if (cnt > 200) {
-        cnt = 0;
-        gcs().send_text(MAV_SEVERITY_NOTICE, "left_real_speed=%d", quadcarCAN->getSpeed(1));
-        gcs().send_text(MAV_SEVERITY_NOTICE, "right_real_speed=%d", quadcarCAN->getSpeed(2));
-        gcs().send_text(MAV_SEVERITY_NOTICE, "target_speed_x=%.2f", (float)Target_Velocity_X);
-        gcs().send_text(MAV_SEVERITY_NOTICE, "move_flag_x=%d, move_flag_z=%d", _moveflag_x, _moveflag_z);
-    }
+    // static uint16_t cnt = 0;
+    // cnt++;
+    // if (cnt > 200) {
+    //     cnt = 0;
+    //     gcs().send_text(MAV_SEVERITY_NOTICE, "left_real_speed=%d", quadcarCAN->getSpeed(1));
+    //     gcs().send_text(MAV_SEVERITY_NOTICE, "right_real_speed=%d", quadcarCAN->getSpeed(2));
+    //     gcs().send_text(MAV_SEVERITY_NOTICE, "target_speed_x=%.2f", (float)Target_Velocity_X);
+    //     gcs().send_text(MAV_SEVERITY_NOTICE, "move_flag_x=%d, move_flag_z=%d", _moveflag_x, _moveflag_z);
+    // }
 
-    // 根据移动标志设置转向目标
-    switch (_moveflag_z) {
-        case moveFlag::moveRight:
-            Turn_Target = Target_Velocity_Z;
-            break;
-        case moveFlag::moveLeft:
-            Turn_Target = -Target_Velocity_Z;
-            break;
-        default:
-            Turn_Target = 0;
-            break;
-    }
+    // // 根据移动标志设置转向目标
+    // switch (_moveflag_z) {
+    //     case moveFlag::moveRight:
+    //         Turn_Target = Target_Velocity_Z;
+    //         break;
+    //     case moveFlag::moveLeft:
+    //         Turn_Target = -Target_Velocity_Z;
+    //         break;
+    //     default:
+    //         Turn_Target = 0;
+    //         break;
+    // }
 
     // 速度环PID控制
     control_velocity = Velocity(wheel_left_f, wheel_right_f);
 
     // 转向环PID控制
-    control_turn = Turn(_ahrs->yaw, gyro_z);
+    control_turn = Turn(gyro_z);
 
     // motor值正数使小车前进，负数使小车后退, 范围【-1，1】
     motor_target_left_f  = control_velocity + control_turn; // 计算左轮电机最终PWM
@@ -198,4 +228,52 @@ void AC_QuadCarControl::update(void)
     // 最终的电机输入量
     quadcarCAN->setCurrent(1, (int16_t)motor_target_left_int);
     quadcarCAN->setCurrent(2, (int16_t)motor_target_right_int);
+
+    pilot_control();
+
+    if (hal.rcin->read(CH_7) > 1700) {
+        stop_quadcar_control = true;
+    } else {
+        stop_quadcar_control = false;
+    }
+
+}
+
+void AC_QuadCarControl::pilot_control()
+{
+    int16_t pwm_x = hal.rcin->read(CH_2) - 1500;
+    int16_t pwm_z = hal.rcin->read(CH_4) - 1500;
+    int16_t pwm_y = hal.rcin->read(CH_1) - 1500;
+    int16_t pwm_h = hal.rcin->read(CH_6) - 1500;
+
+    if (pwm_x < 50 && pwm_x > -50) {
+        _movement_x = 0;
+    }
+    else if (abs(pwm_x) > 500) {
+        _movement_x = 0;
+    }
+    else {
+        _movement_x = pwm_x;
+    }
+
+    if (pwm_z < 50 && pwm_z > -50) {
+        _movement_z = 0;
+    }
+    else if (abs(pwm_z) > 500) {
+        _movement_z = 0;
+    }
+    else {
+        _movement_z = pwm_z;
+    }
+
+    if (pwm_y < 20 && pwm_y > -20) {
+        _movement_y = 0;
+    }
+    else if (abs(pwm_y) > 500) {
+        _movement_y = 0;
+    }
+    else {
+        _movement_y = pwm_y;
+    }
+
 }

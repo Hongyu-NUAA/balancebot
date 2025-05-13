@@ -63,9 +63,13 @@ public:
     // empty destructor to suppress compiler warning
     virtual ~AC_QuadCarControl() { }
 
+    void init();
+
     float Velocity(float encoder_left, float encoder_right);
-    float Turn(float yaw, float gyro);
+    float Turn(float gyro);
     float smooth_target_speed(float target_speed);
+
+    void pilot_control();
 
     void update(void);
 
@@ -95,13 +99,13 @@ public:
 
     enum BalanceMode {
         ground                 = 0,
-        flying_with_balance    = 1,
-        flying_without_balance = 2,
-        landing_check          = 3,
+        aerial                 = 1,
+
     };
 
 
 protected:
+    AP_QuadCarCAN* quadcarCAN;
 
     ///////////////////////////////////////////////////////
     // PID参数
@@ -124,6 +128,9 @@ protected:
     AP_Float Target_Velocity_X;
     AP_Float Target_Velocity_Z;
 
+    AP_Float Target_MAX_Velocity_X;
+    AP_Float Target_MAX_Velocity_Z;
+
     ///////////////////////////////////////////////////////
     // 速度环参数
 
@@ -136,12 +143,22 @@ protected:
     float Turn_Kp;
     float Turn_Kd;
 
+    uint16_t _movement_x;
+    uint16_t _movement_z;
+    uint16_t _movement_y;
+
     uint8_t _moveflag_x;
     uint8_t _moveflag_z;
 
-    float control_balance, control_velocity, control_turn;
+    uint8_t stop_quadcar_control;
+
+    float control_velocity, control_turn;
 
     float _dt;
+
+    bool Flag_Stop;
+
+    bool force_stop_quadcar_control;
 
     enum BalanceMode balanceMode;
 };
