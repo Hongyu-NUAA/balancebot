@@ -16,9 +16,9 @@ const AP_Param::GroupInfo AC_QuadCarControl::var_info[] = {
 
     AP_GROUPINFO("MAX_SPEED", 3, AC_QuadCarControl, _max_speed, AC_BALANCE_MAX_SPEED),
 
-    AP_GROUPINFO("TAR_SPEED_X", 4, AC_QuadCarControl, Target_Velocity_X, AC_BALANCE_TARGET_X_SPEED),
+    AP_GROUPINFO("TAR_SP_X", 4, AC_QuadCarControl, Target_Velocity_X, AC_BALANCE_TARGET_X_SPEED),
 
-    AP_GROUPINFO("TAR_SPEED_Z", 5, AC_QuadCarControl, Target_Velocity_Z, AC_BALANCE_TARGET_Z_SPEED),
+    AP_GROUPINFO("TAR_SP_Z", 5, AC_QuadCarControl, Target_Velocity_Z, AC_BALANCE_TARGET_Z_SPEED),
 
     AP_GROUPINFO("ACCEL_MAX", 6, AC_QuadCarControl, _max_accel, AC_BALANCE_MAX_ACCEL),
 
