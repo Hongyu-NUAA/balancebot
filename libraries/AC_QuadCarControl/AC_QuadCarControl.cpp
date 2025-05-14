@@ -184,30 +184,6 @@ void AC_QuadCarControl::update(void)
     wheel_left_f  = (float)quadcarCAN->getSpeed(1) / max_scale_value;
     wheel_right_f = -(float)quadcarCAN->getSpeed(2) / max_scale_value;
 
-    // 调试用
-    // static uint16_t cnt = 0;
-    // cnt++;
-    // if (cnt > 200) {
-    //     cnt = 0;
-    //     gcs().send_text(MAV_SEVERITY_NOTICE, "left_real_speed=%d", quadcarCAN->getSpeed(1));
-    //     gcs().send_text(MAV_SEVERITY_NOTICE, "right_real_speed=%d", quadcarCAN->getSpeed(2));
-    //     gcs().send_text(MAV_SEVERITY_NOTICE, "target_speed_x=%.2f", (float)Target_Velocity_X);
-    //     gcs().send_text(MAV_SEVERITY_NOTICE, "move_flag_x=%d, move_flag_z=%d", _moveflag_x, _moveflag_z);
-    // }
-
-    // // 根据移动标志设置转向目标
-    // switch (_moveflag_z) {
-    //     case moveFlag::moveRight:
-    //         Turn_Target = Target_Velocity_Z;
-    //         break;
-    //     case moveFlag::moveLeft:
-    //         Turn_Target = -Target_Velocity_Z;
-    //         break;
-    //     default:
-    //         Turn_Target = 0;
-    //         break;
-    // }
-
     // 速度环PID控制
     control_velocity = Velocity(wheel_left_f, wheel_right_f);
 
@@ -231,7 +207,13 @@ void AC_QuadCarControl::update(void)
 
     pilot_control();
 
-    if (hal.rcin->read(CH_7) > 1700) {
+    debug_info();
+    
+    // 读取遥控器的CH7通道，判断是否停止小车控制
+    // 这里的1700是一个经验值，可以根据实际情况进行调整
+    // 例如，如果遥控器的CH8通道值大于1700，则停止小车控制
+    // 如果遥控器的CH8通道值小于1700，则恢复小车控制
+    if (hal.rcin->read(CH_8) > 1700) {
         stop_quadcar_control = true;
     } else {
         stop_quadcar_control = false;
@@ -273,6 +255,21 @@ void AC_QuadCarControl::pilot_control()
     }
     else {
         _movement_y = pwm_y;
+    }
+
+}
+
+void AC_QuadCarControl::debug_info()
+{
+    //调试用
+    static uint16_t cnt = 0;
+    cnt++;
+    if (cnt > 200) {
+        cnt = 0;
+        gcs().send_text(MAV_SEVERITY_NOTICE, "left_real_speed=%d", quadcarCAN->getSpeed(1));
+        gcs().send_text(MAV_SEVERITY_NOTICE, "right_real_speed=%d", quadcarCAN->getSpeed(2));
+        gcs().send_text(MAV_SEVERITY_NOTICE, "target_speed_x=%.2f", (float)Target_Velocity_X);
+        gcs().send_text(MAV_SEVERITY_NOTICE, "move_flag_x=%d, move_flag_z=%d", _moveflag_x, _moveflag_z);
     }
 
 }

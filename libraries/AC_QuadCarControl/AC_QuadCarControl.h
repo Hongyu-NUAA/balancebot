@@ -70,6 +70,8 @@ public:
     float smooth_target_speed(float target_speed);
 
     void pilot_control();
+    
+    void debug_info();
 
     void update(void);
 
