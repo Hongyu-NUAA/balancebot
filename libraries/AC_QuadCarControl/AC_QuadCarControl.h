@@ -73,6 +73,8 @@ public:
     
     void debug_info();
 
+    void set_stop_quadcar_control();
+
     void update(void);
 
     uint8_t get_Balance_Mode() { return balanceMode; }

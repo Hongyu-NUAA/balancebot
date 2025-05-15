@@ -205,19 +205,14 @@ void AC_QuadCarControl::update(void)
     quadcarCAN->setCurrent(1, (int16_t)motor_target_left_int);
     quadcarCAN->setCurrent(2, (int16_t)motor_target_right_int);
 
+    // 调用遥控器控制函数
     pilot_control();
 
+    // 调用调试函数
     debug_info();
     
-    // 读取遥控器的CH7通道，判断是否停止小车控制
-    // 这里的1700是一个经验值，可以根据实际情况进行调整
-    // 例如，如果遥控器的CH8通道值大于1700，则停止小车控制
-    // 如果遥控器的CH8通道值小于1700，则恢复小车控制
-    if (hal.rcin->read(CH_8) > 1700) {
-        stop_quadcar_control = true;
-    } else {
-        stop_quadcar_control = false;
-    }
+    // 调用启停小车控制函数
+    set_stop_quadcar_control();
 
 }
 
@@ -272,4 +267,17 @@ void AC_QuadCarControl::debug_info()
         gcs().send_text(MAV_SEVERITY_NOTICE, "move_flag_x=%d, move_flag_z=%d", _moveflag_x, _moveflag_z);
     }
 
+}
+
+void AC_QuadCarControl::set_stop_quadcar_control()
+{
+    // 读取遥控器的CH8通道，判断是否停止小车控制
+    // 这里的1700是一个经验值，可以根据实际情况进行调整
+    // 例如，如果遥控器的CH8通道值大于1700，则停止小车控制
+    // 如果遥控器的CH8通道值小于1700，则恢复小车控制
+    if (hal.rcin->read(CH_8) > 1700) {
+        stop_quadcar_control = true;
+    } else {
+        stop_quadcar_control = false;
+    }
 }

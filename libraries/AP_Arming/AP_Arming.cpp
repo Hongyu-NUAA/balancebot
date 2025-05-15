@@ -1188,13 +1188,8 @@ bool AP_Arming::can_checks(bool report)
 
                 case AP_CANManager::Driver_Type_QuadCarCAN:
                 {
-                    AP_QuadCarCAN *ap_quadcarcan = AP_QuadCarCAN::get_quadcarcan(i);
-                    if (ap_quadcarcan != nullptr) {
-                        check_failed(ARMING_CHECK_SYSTEM, report, "QuadCarCAN: %s", fail_msg);
-                        return false;
-                    }
                     break;
-                }
+                }    
 
                 case AP_CANManager::Driver_Type_EFI_NWPMU:
                 case AP_CANManager::Driver_Type_USD1:
