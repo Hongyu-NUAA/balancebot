@@ -132,9 +132,6 @@ protected:
     AP_Float Target_Velocity_X;
     AP_Float Target_Velocity_Z;
 
-    AP_Float Target_MAX_Velocity_X;
-    AP_Float Target_MAX_Velocity_Z;
-
     ///////////////////////////////////////////////////////
     // 速度环参数
 

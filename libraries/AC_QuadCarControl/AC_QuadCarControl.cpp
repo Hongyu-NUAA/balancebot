@@ -90,7 +90,7 @@ float AC_QuadCarControl::Velocity(float encoder_left, float encoder_right)
     float encoder_movement;
 
     //================遥控前进后退部分====================//
-    encoder_movement = (float)_movement_x / 500.0f * Target_MAX_Velocity_X;
+    encoder_movement = (float)_movement_x / 500.0f * Target_Velocity_X;
 
     //================速度PI控制器=====================//
     
@@ -143,7 +143,7 @@ float AC_QuadCarControl::Turn(float gyro)
     float turn_out;
     
     //===================遥控左右旋转部分=================//
-    turn_target = (float)_movement_z / 500.0f * Target_MAX_Velocity_Z;
+    turn_target = (float)_movement_z / 500.0f * Target_Velocity_Z;
 
     //===================转向PD控制器=================//
     turn_out = turn_target * _pid_turn.kP() + gyro * _pid_turn.kD(); // 结合Z轴陀螺仪进行PD控制
