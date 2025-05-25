@@ -172,8 +172,8 @@ struct PACKED log_Data_UInt32t {
 // Write a uint32_t data packet
 void Copter::Log_Write_Data(LogDataID id, uint32_t value)
 {
-    float JT = balanceControl->JT;
-    float sfg = balanceControl->S_FG;
+    // float JT = balanceControl->JT;
+    // float sfg = balanceControl->S_FG;
     float accZ = balanceControl->accelData;
     if (should_log(MASK_LOG_ANY)) {
         struct log_Data_UInt32t pkt = {
@@ -181,8 +181,8 @@ void Copter::Log_Write_Data(LogDataID id, uint32_t value)
             time_us     : AP_HAL::micros64(),
             id          : (uint8_t)id,
             data_value  : value,
-            factor_sgf  : JT,
-            factor_sfg  : sfg,
+            // factor_sgf  : JT,
+            // factor_sfg  : sfg,
             accel_z     : accZ
         };
         logger.WriteCriticalBlock(&pkt, sizeof(pkt));

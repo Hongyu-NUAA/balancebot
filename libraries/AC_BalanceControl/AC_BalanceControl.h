@@ -75,11 +75,11 @@ public:
 
     void init();
 
-    float angle_controller(float Angle, float Gyro);
+    // float angle_controller(float Angle, float Gyro);
     float velocity_controller(float encoder_left, float encoder_right);
     float turn_controller(float gyro);
-    void  roll_controller(float roll, float gyro);
-    void  hight_controller();
+    // void  roll_controller(float roll, float gyro);
+    // void  hight_controller();
 
     void pilot_control();
     // void set_control_mode();
@@ -127,12 +127,12 @@ public:
     // bool Put_Down(float Angle, int encoder_left, int encoder_right);
     // void debug_info();
     // void function_s();
-    double S_FG;
-    double S_GF;
-    double JT;
+    // double S_FG;
+    // double S_GF;
+    // double JT;
 
     // void AC_BalanceControl::checkAcc_func();
-    void check_Acceleration();
+    // void check_Acceleration();
     float accelData;
 
 
@@ -172,9 +172,9 @@ protected:
 
     ///////////////////////////////////////////////////////
     // 直立环参数
-    float angle_out;
-    float angle_bias;
-    float gyro_bias;
+    // float angle_out;
+    // float angle_bias;
+    // float gyro_bias;
 
     ///////////////////////////////////////////////////////
     // 速度环参数
@@ -200,8 +200,8 @@ protected:
     ///////////////////////////////////////////////////////
     int16_t _movement_x;
     int16_t _movement_z;
-    int16_t _movement_y;
-    int16_t _movement_h;
+    // int16_t _movement_y;
+    // int16_t _movement_h;
 
 
     uint8_t stop_balance_control;

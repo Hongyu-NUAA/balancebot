@@ -87,25 +87,25 @@ Output  : balance：Vertical control PWM
 入口参数：Angle:角度；Gyro：角速度
 返回  值：balance：直立控制PWM
 **************************************************************************/
-float AC_BalanceControl::angle_controller(float Angle, float Gyro)
-{
-    // 求出平衡的角度中值 和机械相关
-    angle_bias = _zero_angle - Angle;
+// float AC_BalanceControl::angle_controller(float Angle, float Gyro)
+// {
+//     // 求出平衡的角度中值 和机械相关
+//     angle_bias = _zero_angle - Angle;
 
-    // 计算角速度误差
-    gyro_bias = 0.0f - Gyro;
+//     // 计算角速度误差
+//     gyro_bias = 0.0f - Gyro;
 
-    // 计算平衡控制的电机PWM  PD控制   kp是P系数 kd是D系数
-    angle_out = _pid_angle.kP() * angle_bias + gyro_bias * _pid_angle.kD();
+//     // 计算平衡控制的电机PWM  PD控制   kp是P系数 kd是D系数
+//     angle_out = _pid_angle.kP() * angle_bias + gyro_bias * _pid_angle.kD();
 
-    if (stop_balance_control || Flag_Stop || force_stop_balance_control) {
-        angle_out  = 0;
-        angle_bias = 0;
-        gyro_bias  = 0;
-    }
+//     if (stop_balance_control || Flag_Stop || force_stop_balance_control) {
+//         angle_out  = 0;
+//         angle_bias = 0;
+//         gyro_bias  = 0;
+//     }
 
-    return angle_out;
-}
+//     return angle_out;
+// }
 
 /**************************************************************************
 Function: Speed PI control
@@ -163,33 +163,33 @@ float AC_BalanceControl::turn_controller(float gyro)
     return turn_out;
 }
 
-void AC_BalanceControl::roll_controller(float roll, float gyro)
-{
-    if (_motors == nullptr) return;
+// void AC_BalanceControl::roll_controller(float roll, float gyro)
+// {
+//     if (_motors == nullptr) return;
 
-    if(fabsf((hal.rcin->read(CH_1)-1500)) < 20){
-        roll_target = 0.0f;
-    }else{
-        roll_target = (float)_movement_y / 500.0f * radians(60.0f);
-    }
+//     if(fabsf((hal.rcin->read(CH_1)-1500)) < 20){
+//         roll_target = 0.0f;
+//     }else{
+//         roll_target = (float)_movement_y / 500.0f * radians(60.0f);
+//     }
 
-    roll_bias = roll_target - roll; 
+//     roll_bias = roll_target - roll; 
 
-    roll_out = _pid_roll.kP() * roll_bias + _pid_roll.kD() * gyro;
+//     roll_out = _pid_roll.kP() * roll_bias + _pid_roll.kD() * gyro;
 
-    _motors->set_roll_out(JT * roll_out); // -1 ~ 1
-}
+//     _motors->set_roll_out(JT * roll_out); // -1 ~ 1
+// }
 
-void AC_BalanceControl::hight_controller()
-{
-    if (_motors == nullptr) return;
+// void AC_BalanceControl::hight_controller()
+// {
+//     if (_motors == nullptr) return;
 
-    float high_out;
+//     float high_out;
 
-    high_out = (float)_movement_h / 500.0f * radians(30.0f);
+//     high_out = (float)_movement_h / 500.0f * radians(30.0f);
 
-    _motors->set_high_out(JT * high_out); // -1 ~ 1
-}
+//     _motors->set_high_out(JT * high_out); // -1 ~ 1
+// }
 
 void AC_BalanceControl::update(void)
 {
@@ -207,15 +207,16 @@ void AC_BalanceControl::update(void)
         return;
     }
 
-    static float angle_y, angle_x, gyro_x,  gyro_y, gyro_z;
+    // static float angle_y, angle_x, gyro_x,  gyro_y, gyro_z;
+    static float gyro_z;
     static float wheel_left_f, wheel_right_f;
     static float motor_target_left_f, motor_target_right_f;
     const float  max_scale_value = 10000.0f;
 
-    angle_y = _ahrs->pitch;
-    angle_x = _ahrs->roll;
-    gyro_x  = _ahrs->get_gyro_latest()[0];
-    gyro_y  = _ahrs->get_gyro_latest()[1];
+    // angle_y = _ahrs->pitch;
+    // angle_x = _ahrs->roll;
+    // gyro_x  = _ahrs->get_gyro_latest()[0];
+    // gyro_y  = _ahrs->get_gyro_latest()[1];
     gyro_z  = _ahrs->get_gyro_latest()[2];
 
     // 转速缩小1000倍
@@ -223,7 +224,7 @@ void AC_BalanceControl::update(void)
     wheel_right_f = -(float)balanceCAN->getSpeed(1) / max_scale_value;
 
     // 平衡PID控制 Gyro_Balance平衡角速度极性：前倾为正，后倾为负
-    control_balance = angle_controller(angle_y, gyro_y);
+    // control_balance = angle_controller(angle_y, gyro_y);
 
     // 速度环PID控制,记住，速度反馈是正反馈，就是小车快的时候要慢下来就需要再跑快一点
     control_velocity = velocity_controller(wheel_left_f, wheel_right_f);
@@ -232,8 +233,11 @@ void AC_BalanceControl::update(void)
     control_turn = turn_controller(gyro_z);
 
     // motor值正数使小车前进，负数使小车后退, 范围【-1，1】
-    motor_target_left_f  = control_balance + control_velocity + control_turn; // 计算左轮电机最终PWM
-    motor_target_right_f = control_balance + control_velocity - control_turn; // 计算右轮电机最终PWM
+    // motor_target_left_f  = control_balance + control_velocity + control_turn; // 计算左轮电机最终PWM
+    // motor_target_right_f = control_balance + control_velocity - control_turn; // 计算右轮电机最终PWM
+
+    motor_target_left_f  = control_velocity + control_turn; // 计算左轮电机最终PWM
+    motor_target_right_f = control_velocity - control_turn; // 计算右轮电机最终PWM
 
     motor_target_left_int  = (int16_t)(motor_target_left_f * max_scale_value);
     motor_target_right_int = -(int16_t)(motor_target_right_f * max_scale_value);
@@ -243,14 +247,17 @@ void AC_BalanceControl::update(void)
    else {motor_target_right_int -= 60;}
 
     // 最终的电机输入量
-    balanceCAN->setCurrent(0, S_FG * (int16_t)motor_target_left_int);
-    balanceCAN->setCurrent(1, S_FG * (int16_t)motor_target_right_int);
+    // balanceCAN->setCurrent(0, S_FG * (int16_t)motor_target_left_int);
+    // balanceCAN->setCurrent(1, S_FG * (int16_t)motor_target_right_int);
+
+    balanceCAN->setCurrent(0, (int16_t)motor_target_left_int);
+    balanceCAN->setCurrent(1, (int16_t)motor_target_right_int);
 
     // 腿部滚转控制
-    roll_controller(angle_x, gyro_x);
+    // roll_controller(angle_x, gyro_x);
 
     // 腿部高度控制
-    hight_controller();
+    // hight_controller();
 
     // 设置模式
     // set_control_mode();
@@ -281,7 +288,7 @@ void AC_BalanceControl::update(void)
     //     cnt = 0;
     //     gcs().send_text(MAV_SEVERITY_NOTICE, "######## Time = %lld ########", timeus);
     // }
-    check_Acceleration();
+    // check_Acceleration();
 }
 
 // void AC_BalanceControl::function_s()
@@ -349,58 +356,58 @@ void AC_BalanceControl::update(void)
 
 // }
 
-void AC_BalanceControl::check_Acceleration(){
-    accelData =  _ahrs->get_accel_ef().z + 9.8f; //获取当前加速度值
-    int16_t T = hal.rcin->read(CH_3); //获取当前油门输入值
-    switch(balanceMode){
-        case BalanceMode::ground:{
-            S_GF = 1.0f; //飞行部分影响因子置1，正常
-            S_FG = 1.0f; //轮足电机影响因子置1，开启
-            JT = 1;      //关节舵机影响因子置1，开启
-            _motors->set_fac_out(JT);   //输出飞行部分影响因子，方便调用
+// void AC_BalanceControl::check_Acceleration(){
+//     accelData =  _ahrs->get_accel_ef().z + 9.8f; //获取当前加速度值
+//     int16_t T = hal.rcin->read(CH_3); //获取当前油门输入值
+//     switch(balanceMode){
+//         case BalanceMode::ground:{
+//             S_GF = 1.0f; //飞行部分影响因子置1，正常
+//             S_FG = 1.0f; //轮足电机影响因子置1，开启
+//             JT = 1;      //关节舵机影响因子置1，开启
+//             _motors->set_fac_out(JT);   //输出飞行部分影响因子，方便调用
 
-            if((fabsf(accelData) > _take_off_acc) && (hal.rcin->read(CH_3) > _take_off_thr) && (hal.rcin->read(CH_7) < 1500) && _motors->armed()){ //起飞检测
-            gcs().send_text(MAV_SEVERITY_NOTICE, "*************************************");
-            gcs().send_text(MAV_SEVERITY_NOTICE, "Balance_Copter is taking off, accel = %f", accelData);
-            gcs().send_text(MAV_SEVERITY_NOTICE, "*************************************");
+//             if((fabsf(accelData) > _take_off_acc) && (hal.rcin->read(CH_3) > _take_off_thr) && (hal.rcin->read(CH_7) < 1500) && _motors->armed()){ //起飞检测
+//             gcs().send_text(MAV_SEVERITY_NOTICE, "*************************************");
+//             gcs().send_text(MAV_SEVERITY_NOTICE, "Balance_Copter is taking off, accel = %f", accelData);
+//             gcs().send_text(MAV_SEVERITY_NOTICE, "*************************************");
 
-            S_GF = 1.0f;    //起飞，飞行部分影响因子置1
-            S_FG = 0.0f;    //轮足电机影响因子置0，关闭
-            JT = 0.0f;      //关节舵机影响因子置0，关闭
-            _motors->set_fac_out(JT);
+//             S_GF = 1.0f;    //起飞，飞行部分影响因子置1
+//             S_FG = 0.0f;    //轮足电机影响因子置0，关闭
+//             JT = 0.0f;      //关节舵机影响因子置0，关闭
+//             _motors->set_fac_out(JT);
 
-            balanceMode = BalanceMode::aerial; //进入飞行模式
-            }
-            break;
-        }
+//             balanceMode = BalanceMode::aerial; //进入飞行模式
+//             }
+//             break;
+//         }
 
-        case BalanceMode::aerial:{
-            S_GF = 1.0f; 
-            S_FG = 0.0f;
-            if((hal.rcin->read(CH_3) < 1400) && (hal.rcin->read(CH_7) > 1500)){ //如果进入空地过渡且油门输入小于1300时
-                JT   = 1 - 1 / (1 + expf(-((T - 1300) / 20))); //关节舵机影响因子为S形函数，随着油门量减少作用越来越强，以适应复杂地形
-            }
-            _motors->set_fac_out(JT);   
+//         case BalanceMode::aerial:{
+//             S_GF = 1.0f; 
+//             S_FG = 0.0f;
+//             if((hal.rcin->read(CH_3) < 1400) && (hal.rcin->read(CH_7) > 1500)){ //如果进入空地过渡且油门输入小于1300时
+//                 JT   = 1 - 1 / (1 + expf(-((T - 1300) / 20))); //关节舵机影响因子为S形函数，随着油门量减少作用越来越强，以适应复杂地形
+//             }
+//             _motors->set_fac_out(JT);   
 
-            if((fabsf(accelData) > _landing_acc) && (hal.rcin->read(CH_3) < _landing_thr) && (hal.rcin->read(CH_7) > 1500) && alt_cm < 10){ //降落检测
-            gcs().send_text(MAV_SEVERITY_NOTICE, "*************************************");
-            gcs().send_text(MAV_SEVERITY_NOTICE, "Balance_Copter is landing, accel = %f", accelData);
-            gcs().send_text(MAV_SEVERITY_NOTICE, "*************************************");
+//             if((fabsf(accelData) > _landing_acc) && (hal.rcin->read(CH_3) < _landing_thr) && (hal.rcin->read(CH_7) > 1500) && alt_cm < 10){ //降落检测
+//             gcs().send_text(MAV_SEVERITY_NOTICE, "*************************************");
+//             gcs().send_text(MAV_SEVERITY_NOTICE, "Balance_Copter is landing, accel = %f", accelData);
+//             gcs().send_text(MAV_SEVERITY_NOTICE, "*************************************");
 
-            S_GF = 1 / (1 + expf(-((T - 1200) / 20))); //成功落地后油门量会逐渐减小，避免由1到0的突变引入额外的扰动
-            S_FG = 1.0f;
-            JT   = 1.0F;
-            _motors->set_fac_out(JT);
+//             S_GF = 1 / (1 + expf(-((T - 1200) / 20))); //成功落地后油门量会逐渐减小，避免由1到0的突变引入额外的扰动
+//             S_FG = 1.0f;
+//             JT   = 1.0F;
+//             _motors->set_fac_out(JT);
 
-            balanceMode = BalanceMode::ground; //进入地面模式
-            }
-            break;
-        }
+//             balanceMode = BalanceMode::ground; //进入地面模式
+//             }
+//             break;
+//         }
 
-        default:
-            break;
-    }
-}
+//         default:
+//             break;
+//     }
+// }
 
 // void AC_BalanceControl::check_Acceleration(){
 //     accelData =  _ahrs->get_accel_ef().z + 9.8f;
@@ -499,8 +506,8 @@ void AC_BalanceControl::pilot_control()
 {
     int16_t pwm_x = hal.rcin->read(CH_2) - 1500;
     int16_t pwm_z = hal.rcin->read(CH_4) - 1500;
-    int16_t pwm_y = hal.rcin->read(CH_1) - 1500;
-    int16_t pwm_h = hal.rcin->read(CH_6) - 1500;
+    // int16_t pwm_y = hal.rcin->read(CH_1) - 1500;
+    // int16_t pwm_h = hal.rcin->read(CH_6) - 1500;
     
     if (pwm_x < 50 && pwm_x > -50) {
         _movement_x = 0;
@@ -518,21 +525,21 @@ void AC_BalanceControl::pilot_control()
         _movement_z = pwm_z;
     }
 
-    if (pwm_y < 20 && pwm_y > -20) {
-        _movement_y = 0;
-    } else if (abs(pwm_y) > 500) {
-        _movement_y = 0;
-    } else {
-        _movement_y = pwm_y;
-    }
+    // if (pwm_y < 20 && pwm_y > -20) {
+    //     _movement_y = 0;
+    // } else if (abs(pwm_y) > 500) {
+    //     _movement_y = 0;
+    // } else {
+    //     _movement_y = pwm_y;
+    // }
 
-    if (pwm_h < 20 && pwm_h > -20) {
-        _movement_h = 0;
-    } else if (abs(pwm_h) > 500) {
-        _movement_h = 0;
-    } else {
-        _movement_h = pwm_h;
-    }
+    // if (pwm_h < 20 && pwm_h > -20) {
+    //     _movement_h = 0;
+    // } else if (abs(pwm_h) > 500) {
+    //     _movement_h = 0;
+    // } else {
+    //     _movement_h = pwm_h;
+    // }
 }
 
 // void AC_BalanceControl::debug_info()
