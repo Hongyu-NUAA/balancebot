@@ -65,7 +65,7 @@ AC_BalanceControl::AC_BalanceControl(AP_Motors* motors, AP_AHRS_View* ahrs)
     speed_low_pass_filter.reset(0);
 
     _movement_x = moveFlag::none;
-    _movement_z = moveFlag::none;
+    // _movement_z = moveFlag::none;
 
     balanceMode = BalanceMode::ground;
 
@@ -147,21 +147,21 @@ Output  : Turn control PWM
 入口参数：Z轴陀螺仪
 返回  值：转向控制PWM
 **************************************************************************/
-float AC_BalanceControl::turn_controller(float gyro)
-{
-    //===================遥控左右旋转部分=================//
-    turn_target = (float)_movement_z / 500.0f * Target_MAX_Velocity_Z;
+// float AC_BalanceControl::turn_controller(float gyro)
+// {
+//     //===================遥控左右旋转部分=================//
+//     turn_target = (float)_movement_z / 500.0f * Target_MAX_Velocity_Z;
 
-    //===================转向PD控制器=================//
-    turn_out = turn_target * _pid_turn.kP() + gyro * _pid_turn.kD(); // 结合Z轴陀螺仪进行PD控制
+//     //===================转向PD控制器=================//
+//     turn_out = turn_target * _pid_turn.kP() + gyro * _pid_turn.kD(); // 结合Z轴陀螺仪进行PD控制
 
-    if (stop_balance_control || Flag_Stop || force_stop_balance_control) {
-        turn_out    = 0;
-        turn_target = 0;
-    }
+//     if (stop_balance_control || Flag_Stop || force_stop_balance_control) {
+//         turn_out    = 0;
+//         turn_target = 0;
+//     }
 
-    return turn_out;
-}
+//     return turn_out;
+// }
 
 // void AC_BalanceControl::roll_controller(float roll, float gyro)
 // {
@@ -208,7 +208,7 @@ void AC_BalanceControl::update(void)
     }
 
     // static float angle_y, angle_x, gyro_x,  gyro_y, gyro_z;
-    static float gyro_z;
+    // static float gyro_z;
     static float wheel_left_f, wheel_right_f;
     static float motor_target_left_f, motor_target_right_f;
     const float  max_scale_value = 10000.0f;
@@ -217,7 +217,7 @@ void AC_BalanceControl::update(void)
     // angle_x = _ahrs->roll;
     // gyro_x  = _ahrs->get_gyro_latest()[0];
     // gyro_y  = _ahrs->get_gyro_latest()[1];
-    gyro_z  = _ahrs->get_gyro_latest()[2];
+    // gyro_z  = _ahrs->get_gyro_latest()[2];
 
     // 转速缩小1000倍
     wheel_left_f  = (float)balanceCAN->getSpeed(0) / max_scale_value;
@@ -230,14 +230,17 @@ void AC_BalanceControl::update(void)
     control_velocity = velocity_controller(wheel_left_f, wheel_right_f);
 
     // 转向环PID控制
-    control_turn = turn_controller(gyro_z);
+    // control_turn = turn_controller(gyro_z);
 
     // motor值正数使小车前进，负数使小车后退, 范围【-1，1】
     // motor_target_left_f  = control_balance + control_velocity + control_turn; // 计算左轮电机最终PWM
     // motor_target_right_f = control_balance + control_velocity - control_turn; // 计算右轮电机最终PWM
 
-    motor_target_left_f  = control_velocity + control_turn; // 计算左轮电机最终PWM
-    motor_target_right_f = control_velocity - control_turn; // 计算右轮电机最终PWM
+    // motor_target_left_f  = control_velocity + control_turn; // 计算左轮电机最终PWM
+    // motor_target_right_f = control_velocity - control_turn; // 计算右轮电机最终PWM
+
+    motor_target_left_f  = control_velocity; // 计算左轮电机最终PWM
+    motor_target_right_f = control_velocity; // 计算右轮电机最终PWM
 
     motor_target_left_int  = (int16_t)(motor_target_left_f * max_scale_value);
     motor_target_right_int = -(int16_t)(motor_target_right_f * max_scale_value);
@@ -505,7 +508,7 @@ void AC_BalanceControl::update(void)
 void AC_BalanceControl::pilot_control()
 {
     int16_t pwm_x = hal.rcin->read(CH_2) - 1500;
-    int16_t pwm_z = hal.rcin->read(CH_4) - 1500;
+    // int16_t pwm_z = hal.rcin->read(CH_4) - 1500;
     // int16_t pwm_y = hal.rcin->read(CH_1) - 1500;
     // int16_t pwm_h = hal.rcin->read(CH_6) - 1500;
     
@@ -517,13 +520,13 @@ void AC_BalanceControl::pilot_control()
         _movement_x = pwm_x;
     }
 
-    if (pwm_z < 50 && pwm_z > -50) {
-        _movement_z = 0;
-    } else if (abs(pwm_z) > 500) {
-        _movement_z = 0;
-    } else {
-        _movement_z = pwm_z;
-    }
+    // if (pwm_z < 50 && pwm_z > -50) {
+    //     _movement_z = 0;
+    // } else if (abs(pwm_z) > 500) {
+    //     _movement_z = 0;
+    // } else {
+    //     _movement_z = pwm_z;
+    // }
 
     // if (pwm_y < 20 && pwm_y > -20) {
     //     _movement_y = 0;
