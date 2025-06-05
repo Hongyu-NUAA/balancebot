@@ -153,7 +153,7 @@ float AC_BalanceControl::turn_controller(float gyro)
     turn_target = (float)_movement_z / 500.0f * Target_MAX_Velocity_Z;
 
     //===================转向PD控制器=================//
-    turn_out = turn_target * _pid_turn.kP() + gyro * _pid_turn.kD(); // 结合Z轴陀螺仪进行PD控制
+    turn_out = turn_target * _pid_turn.kP() - gyro * _pid_turn.kD(); // 结合Z轴陀螺仪进行PD控制
 
     if (stop_balance_control || Flag_Stop || force_stop_balance_control) {
         turn_out    = 0;
